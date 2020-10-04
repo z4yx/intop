@@ -37,7 +37,6 @@ func parseIRQSource(line string, nCPU int) (ok bool, number int, info IRQSource)
 		if n == 0 || err != nil {
 			return
 		}
-		info.Sum += info.PerCPU[i]
 	}
 	remaining, err := ioutil.ReadAll(rdr)
 	if err != nil {
@@ -75,10 +74,6 @@ func GetCurrentIRQStat() (stat IRQStat, err error) {
 		}
 		stat.IRQSources[num] = info
 	}
-	for _, info := range stat.IRQSources {
-		for i, n := range info.PerCPU {
-			stat.CPUSum[i] += n
-		}
-	}
+	stat.CalcSum()
 	return
 }

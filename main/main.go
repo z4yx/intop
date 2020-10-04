@@ -36,11 +36,12 @@ func main() {
 		curr, err := datasource.GetCurrentIRQStat()
 		if err == nil {
 			curr.Subtract(&baseStat)
+			ui.SetCPUOrders(curr.CalcCPURanking())
 			ui.DrawHeaderLines(curr.CPUName, curr.CPUSum)
-			i := 0
-			for num, info := range curr.IRQSources {
-				ui.DrawIRQSource(i, info.Name, num, info.PerCPU)
-				i++
+			irqOrders := curr.CalcIRQSrcRanking()
+			for i, num := range irqOrders {
+				info := curr.IRQSources[num]
+				ui.DrawIRQSources(i, info.Name, num, info.PerCPU)
 			}
 		}
 		ui.Refresh()

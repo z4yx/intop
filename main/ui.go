@@ -9,34 +9,43 @@ import (
 const IRQ_NAME_WIDTH = 16
 
 type IntopUI struct {
-	win *goncurses.Window
+	win      *goncurses.Window
+	orderCPU []int
+	// orderIRQ []int
+}
+
+func (ui *IntopUI) SetCPUOrders(orderCPU []int) {
+	ui.orderCPU = orderCPU
+	// ui.orderIRQ = orderIRQ
 }
 
 func (ui *IntopUI) DrawHeaderLines(names []string, irqSum []uint64) {
 	ui.win.Move(0, IRQ_NAME_WIDTH)
-	for _, name := range names {
-		ui.win.Printf("% 10s", name)
+	for _, idx := range ui.orderCPU {
+		ui.win.Printf("% 10s", names[idx])
 	}
-	ui.win.Move(1, IRQ_NAME_WIDTH)
-	for _, sum := range irqSum {
-		ui.win.Printf("% 10d", sum)
+	ui.win.Move(1, 0)
+	ui.win.Printf("%*s", IRQ_NAME_WIDTH, "IRQ Per CPU:")
+	for _, idx := range ui.orderCPU {
+		ui.win.Printf("% 10d", irqSum[idx])
 	}
 }
 
-func (ui *IntopUI) DrawIRQSource(index int, name string, number int, irq []uint64) {
+func (ui *IntopUI) DrawIRQSources(index int, name string, number int, irqPerCPU []uint64) {
 	ui.win.Move(index+2, 0)
 	label := fmt.Sprintf("[%d]%s", number, name)
 	if len(label) > IRQ_NAME_WIDTH {
 		label = label[:IRQ_NAME_WIDTH]
 	}
 	ui.win.Printf("%-*s", IRQ_NAME_WIDTH, label)
-	for _, d := range irq {
-		ui.win.Printf("% 10d", d)
+	for _, idx := range ui.orderCPU {
+		ui.win.Printf("% 10d", irqPerCPU[idx])
 	}
 }
 
 func (ui *IntopUI) DrawTime(t float64) {
-	ui.win.MovePrintf(0, 0, "%*.3fs", IRQ_NAME_WIDTH-1, t)
+	text := fmt.Sprintf("T=%.3fs", t)
+	ui.win.MovePrintf(0, 0, "%*s", IRQ_NAME_WIDTH, text)
 }
 
 func (ui *IntopUI) Refresh() {

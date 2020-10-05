@@ -34,7 +34,7 @@ func (ui *IntopUI) DrawHeaderLines(names []string, irqSum []uint64) {
 func (ui *IntopUI) DrawFooterLine(nIRQ int) {
 	ui.win.Move(nIRQ+2, 0)
 	ui.win.ClearToEOL()
-	ui.win.Print("  [q] Quit  [r] Reset Statistics")
+	ui.win.Print("  [q] Quit  [r] Reset Count")
 }
 
 func (ui *IntopUI) DrawIRQSources(index int, name string, number int, irqPerCPU []uint64) {
@@ -77,8 +77,7 @@ func NewIntopUI() (ui *IntopUI, err error) {
 		ui = nil
 		return
 	}
-	// ui.win.HLine(1, 1, goncurses.ACS_BOARD, 60)
-	// ui.win.HLine(30, 1, goncurses.ACS_BOARD, 60)
+	goncurses.Cursor(0)
 	return
 }
 

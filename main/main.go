@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/z4yx/intop/datasource"
@@ -13,6 +16,14 @@ func main() {
 	if err != nil {
 		return
 	}
+
+	sigTrap := make(chan os.Signal)
+	signal.Notify(sigTrap, os.Interrupt, syscall.SIGTERM)
+	go (func() {
+		<-sigTrap
+		EndIntopUI()
+		os.Exit(0)
+	})()
 
 	var baseStat datasource.IRQStat
 	var baseTime time.Time

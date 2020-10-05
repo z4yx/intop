@@ -6,7 +6,7 @@ import (
 	"github.com/gbin/goncurses"
 )
 
-const IRQ_NAME_WIDTH = 16
+const IRQ_LABEL_WIDTH = 16
 
 type IntopUI struct {
 	win      *goncurses.Window
@@ -20,12 +20,12 @@ func (ui *IntopUI) SetCPUOrders(orderCPU []int) {
 }
 
 func (ui *IntopUI) DrawHeaderLines(names []string, irqSum []uint64) {
-	ui.win.Move(0, IRQ_NAME_WIDTH)
+	ui.win.Move(0, IRQ_LABEL_WIDTH)
 	for _, idx := range ui.orderCPU {
 		ui.win.Printf("% 10s", names[idx])
 	}
 	ui.win.Move(1, 0)
-	ui.win.Printf("%*s", IRQ_NAME_WIDTH, "IRQ Per CPU:")
+	ui.win.Printf("%*s", IRQ_LABEL_WIDTH, "IRQ Per CPU:")
 	for _, idx := range ui.orderCPU {
 		ui.win.Printf("% 10d", irqSum[idx])
 	}
@@ -39,15 +39,18 @@ func (ui *IntopUI) DrawFooterLine(nIRQ int) {
 
 func (ui *IntopUI) DrawIRQSources(index int, name string, number int, irqPerCPU []uint64) {
 	ui.win.Move(index+2, 0)
-	label := fmt.Sprintf("%d ", number)
-	width := IRQ_NAME_WIDTH - len(label)
+
+	irqNum := fmt.Sprintf("%d ", number)
 	ui.win.AttrOn(goncurses.A_BOLD)
-	ui.win.Print(label)
+	ui.win.Print(irqNum)
 	ui.win.AttrOff(goncurses.A_BOLD)
+
+	width := IRQ_LABEL_WIDTH - len(irqNum)
 	if len(name) > width {
 		name = name[:width]
 	}
 	ui.win.Printf("%-*s", width, name)
+
 	for _, idx := range ui.orderCPU {
 		ui.win.Printf("% 10d", irqPerCPU[idx])
 	}
@@ -55,7 +58,7 @@ func (ui *IntopUI) DrawIRQSources(index int, name string, number int, irqPerCPU 
 
 func (ui *IntopUI) DrawTime(t float64) {
 	text := fmt.Sprintf("T=%.3fs", t)
-	ui.win.MovePrintf(0, 0, "%*s", IRQ_NAME_WIDTH, text)
+	ui.win.MovePrintf(0, 0, "%*s", IRQ_LABEL_WIDTH, text)
 }
 
 func (ui *IntopUI) Refresh() {

@@ -16,7 +16,7 @@ func main() {
 
 	var baseStat datasource.IRQStat
 	var baseTime time.Time
-	clearOldStats := func() bool {
+	resetOldStats := func() bool {
 		var err error
 		currTime := time.Now()
 		baseStat, err = datasource.GetCurrentIRQStat()
@@ -28,7 +28,7 @@ func main() {
 		return true
 	}
 
-	if !clearOldStats() {
+	if !resetOldStats() {
 		return
 	}
 	for {
@@ -43,13 +43,14 @@ func main() {
 				info := curr.IRQSources[num]
 				ui.DrawIRQSources(i, info.Name, num, info.PerCPU)
 			}
+			ui.DrawFooterLine(len(irqOrders))
 		}
 		ui.Refresh()
 		key := ui.KeyInput(1000)
 		if key == 'q' || key == 'Q' {
 			break
-		} else if key == 'c' || key == 'C' {
-			clearOldStats()
+		} else if key == 'r' || key == 'R' {
+			resetOldStats()
 		}
 	}
 

@@ -31,13 +31,23 @@ func (ui *IntopUI) DrawHeaderLines(names []string, irqSum []uint64) {
 	}
 }
 
+func (ui *IntopUI) DrawFooterLine(nIRQ int) {
+	ui.win.Move(nIRQ+2, 0)
+	ui.win.ClearToEOL()
+	ui.win.Print("  [q] Quit  [r] Reset Statistics")
+}
+
 func (ui *IntopUI) DrawIRQSources(index int, name string, number int, irqPerCPU []uint64) {
 	ui.win.Move(index+2, 0)
-	label := fmt.Sprintf("[%d]%s", number, name)
-	if len(label) > IRQ_NAME_WIDTH {
-		label = label[:IRQ_NAME_WIDTH]
+	label := fmt.Sprintf("%d ", number)
+	width := IRQ_NAME_WIDTH - len(label)
+	ui.win.AttrOn(goncurses.A_BOLD)
+	ui.win.Print(label)
+	ui.win.AttrOff(goncurses.A_BOLD)
+	if len(name) > width {
+		name = name[:width]
 	}
-	ui.win.Printf("%-*s", IRQ_NAME_WIDTH, label)
+	ui.win.Printf("%-*s", width, name)
 	for _, idx := range ui.orderCPU {
 		ui.win.Printf("% 10d", irqPerCPU[idx])
 	}

@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+    - name: Setup dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libncurses5-dev libncursesw5-dev
+
     - name: Set up Go 1.13
       uses: actions/setup-go@v1
       with:

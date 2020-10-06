@@ -7,10 +7,39 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/akamensky/argparse"
 	"github.com/z4yx/intop/datasource"
 )
 
+var excludedIRQ map[int]bool
+
+func parseOptions() error {
+	parser := argparse.NewParser("intop", "Real-time visualization of /proc/interrupts")
+	excludedList := parser.IntList("e", "exclude", &argparse.Options{
+		Required: false,
+		Help:     "exclude the given IRQ number",
+	})
+	err := parser.Parse(os.Args)
+	if err != nil {
+		// In case of error print error and print usage
+		// This can also be done by passing -h or --help flags
+		fmt.Print(parser.Usage(err))
+		return err
+	}
+
+	excludedIRQ = map[int]bool{}
+	for _, v := range *excludedList {
+		fmt.Println(v)
+		excludedIRQ[v] = true
+	}
+	return nil
+}
+
 func main() {
+	if parseOptions() != nil {
+		return
+	}
+
 	ui, err := NewIntopUI()
 	defer EndIntopUI()
 	if err != nil {
@@ -30,7 +59,7 @@ func main() {
 	resetOldStats := func() bool {
 		var err error
 		currTime := time.Now()
-		baseStat, err = datasource.GetCurrentIRQStat()
+		baseStat, err = datasource.GetCurrentIRQStat(excludedIRQ)
 		if err != nil {
 			fmt.Printf("Failed to retrieve interrupts info: %v\n", err)
 			return false
@@ -44,7 +73,7 @@ func main() {
 	}
 	for {
 		ui.DrawTime(time.Since(baseTime).Seconds())
-		curr, err := datasource.GetCurrentIRQStat()
+		curr, err := datasource.GetCurrentIRQStat(excludedIRQ)
 		if err == nil {
 			curr.Subtract(&baseStat)
 			ui.SetCPUOrders(curr.CalcCPURanking())

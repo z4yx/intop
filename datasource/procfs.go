@@ -51,7 +51,7 @@ func parseIRQSource(line string, nCPU int) (ok bool, number int, info IRQSource)
 	return
 }
 
-func GetCurrentIRQStat() (stat IRQStat, err error) {
+func GetCurrentIRQStat(excludedIRQ map[int]bool) (stat IRQStat, err error) {
 	interrupts, err := ioutil.ReadFile("/proc/interrupts")
 	if err != nil {
 		return
@@ -72,7 +72,9 @@ func GetCurrentIRQStat() (stat IRQStat, err error) {
 		if !ok {
 			break
 		}
-		stat.IRQSources[num] = info
+		if _, in := excludedIRQ[num]; !in {
+			stat.IRQSources[num] = info
+		}
 	}
 	stat.CalcSum()
 	return

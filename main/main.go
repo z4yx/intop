@@ -11,32 +11,52 @@ import (
 	"github.com/z4yx/intop/datasource"
 )
 
-var excludedIRQ map[int]bool
+type options struct {
+	excludedIRQ map[int]bool
+	labelWidth  int
+}
 
-func parseOptions() error {
+func parseOptions() (options, error) {
+	var opt options
 	parser := argparse.NewParser("intop", "Real-time visualization of /proc/interrupts")
 	excludedList := parser.IntList("e", "exclude", &argparse.Options{
 		Required: false,
 		Help:     "exclude the given IRQ number",
+	})
+	labelWidth := parser.Int("w", "width", &argparse.Options{
+		Required: false,
+		Default:  -1,
+		Help:     "width of IRQ name column",
 	})
 	err := parser.Parse(os.Args)
 	if err != nil {
 		// In case of error print error and print usage
 		// This can also be done by passing -h or --help flags
 		fmt.Print(parser.Usage(err))
-		return err
+		return opt, err
 	}
 
-	excludedIRQ = map[int]bool{}
+	opt.excludedIRQ = map[int]bool{}
 	for _, v := range *excludedList {
 		fmt.Println(v)
-		excludedIRQ[v] = true
+		opt.excludedIRQ[v] = true
 	}
-	return nil
+	opt.labelWidth = *labelWidth
+	return opt, nil
+}
+
+func setLabelWidth(ui *IntopUI, opt *options, baseStat *datasource.IRQStat) {
+	num, name := ui.CalcAdaptiveLabelWidth(&baseStat.IRQSources)
+	if opt.labelWidth <= 0 {
+		ui.SetIRQLabelWidth(num, name)
+	} else {
+		ui.SetIRQLabelWidth(num, opt.labelWidth)
+	}
 }
 
 func main() {
-	if parseOptions() != nil {
+	opt, err := parseOptions()
+	if err != nil {
 		return
 	}
 
@@ -59,7 +79,7 @@ func main() {
 	resetOldStats := func() bool {
 		var err error
 		currTime := time.Now()
-		baseStat, err = datasource.GetCurrentIRQStat(excludedIRQ)
+		baseStat, err = datasource.GetCurrentIRQStat(opt.excludedIRQ)
 		if err != nil {
 			fmt.Printf("Failed to retrieve interrupts info: %v\n", err)
 			return false
@@ -71,9 +91,10 @@ func main() {
 	if !resetOldStats() {
 		return
 	}
+	setLabelWidth(ui, &opt, &baseStat)
 	for {
 		ui.DrawTime(time.Since(baseTime).Seconds())
-		curr, err := datasource.GetCurrentIRQStat(excludedIRQ)
+		curr, err := datasource.GetCurrentIRQStat(opt.excludedIRQ)
 		if err == nil {
 			curr.Subtract(&baseStat)
 			ui.SetCPUOrders(curr.CalcCPURanking())

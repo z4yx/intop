@@ -78,8 +78,22 @@ func (s *IRQStat) Subtract(d *IRQStat) {
 			if !ok { // IRQ source not found in d
 				continue
 			}
-			s.IRQSources[num].PerCPU[i] -= dstat.PerCPU[j]
+			if s.IRQSources[num].PerCPU[i] >= dstat.PerCPU[j] {
+				s.IRQSources[num].PerCPU[i] -= dstat.PerCPU[j]
+			}
 		}
 	}
 	s.CalcSum()
+}
+
+func (s *IRQStat) RemoveStaleItems(n *IRQStat) {
+	rmList := make([]int, 0)
+	for num, _ := range s.IRQSources {
+		if _, ok := n.IRQSources[num]; !ok {
+			rmList = append(rmList, num)
+		}
+	}
+	for _, num := range rmList {
+		delete(s.IRQSources, num)
+	}
 }

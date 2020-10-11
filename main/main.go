@@ -96,6 +96,7 @@ func main() {
 		ui.DrawTime(time.Since(baseTime).Seconds())
 		curr, err := datasource.GetCurrentIRQStat(opt.excludedIRQ)
 		if err == nil {
+			baseStat.RemoveStaleItems(&curr)
 			curr.Subtract(&baseStat)
 			ui.SetCPUOrders(curr.CalcCPURanking())
 			ui.DrawHeaderLines(curr.CPUName, curr.CPUSum)
@@ -112,6 +113,9 @@ func main() {
 			break
 		} else if key == 'r' || key == 'R' {
 			resetOldStats()
+		} else if key == 'd' { // for debugging
+			// delete(curr.IRQSources, 131)
+			// baseStat.RemoveStaleItems(&curr)
 		}
 	}
 

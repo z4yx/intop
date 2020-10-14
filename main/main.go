@@ -38,7 +38,6 @@ func parseOptions() (options, error) {
 
 	opt.excludedIRQ = map[int]bool{}
 	for _, v := range *excludedList {
-		fmt.Println(v)
 		opt.excludedIRQ[v] = true
 	}
 	opt.labelWidth = *labelWidth

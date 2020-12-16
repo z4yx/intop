@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"regexp"
 	"strings"
+	"time"
 )
 
 var reIRQName *regexp.Regexp
@@ -56,6 +57,7 @@ func GetCurrentIRQStat(excludedIRQ map[int]bool) (stat IRQStat, err error) {
 	if err != nil {
 		return
 	}
+	stat.AcqTime = time.Now()
 	lines := strings.Split(string(interrupts), "\n")
 	if len(lines) < 1 {
 		err = errors.New("Empty file")

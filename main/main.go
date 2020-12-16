@@ -73,17 +73,15 @@ func main() {
 		os.Exit(0)
 	})()
 
-	var baseStat datasource.IRQStat
-	var baseTime time.Time
+	var baseStat, recentStat datasource.IRQStat
 	resetOldStats := func() bool {
 		var err error
-		currTime := time.Now()
 		baseStat, err = datasource.GetCurrentIRQStat(opt.excludedIRQ)
 		if err != nil {
 			fmt.Printf("Failed to retrieve interrupts info: %v\n", err)
 			return false
 		}
-		baseTime = currTime
+		recentStat = baseStat.Clone()
 		return true
 	}
 
@@ -91,30 +89,38 @@ func main() {
 		return
 	}
 	setLabelWidth(ui, &opt, &baseStat)
+
 	for {
-		ui.DrawTime(time.Since(baseTime).Seconds())
-		curr, err := datasource.GetCurrentIRQStat(opt.excludedIRQ)
-		if err == nil {
-			baseStat.RemoveStaleItems(&curr)
-			curr.Subtract(&baseStat)
-			ui.SetCPUOrders(curr.CalcCPURanking())
-			ui.DrawHeaderLines(curr.CPUName, curr.CPUSum)
-			irqOrders := curr.CalcIRQSrcRanking()
-			for i, num := range irqOrders {
-				info := curr.IRQSources[num]
-				ui.DrawIRQSources(i, info.Name, num, info.PerCPU)
-			}
-			ui.DrawFooterLine(len(irqOrders))
+		ui.DrawTime(recentStat.AcqTime.Sub(baseStat.AcqTime).Seconds())
+
+		baseStat.RemoveStaleItems(&recentStat)
+		recentStat.Subtract(&baseStat)
+
+		ui.SetCPUOrders(recentStat.CalcCPURanking())
+		ui.DrawHeaderLines(recentStat.CPUName, recentStat.CPUSum)
+		irqOrders := recentStat.CalcIRQSrcRanking()
+		for i, num := range irqOrders {
+			info := recentStat.IRQSources[num]
+			ui.DrawIRQSources(i, info.Name, num, info.PerCPU)
 		}
+		ui.DrawFooterLine(len(irqOrders))
 		ui.Refresh()
-		key := ui.KeyInput(1000)
+
+		waitMs := 1000 - time.Since(baseStat.AcqTime).Milliseconds()%1000
+		key := ui.KeyInput(int(waitMs))
 		if key == 'q' || key == 'Q' {
 			break
 		} else if key == 'r' || key == 'R' {
 			resetOldStats()
 		} else if key == 'd' { // for debugging
-			// delete(curr.IRQSources, 131)
-			// baseStat.RemoveStaleItems(&curr)
+			// delete(recentStat.IRQSources, 131)
+			// baseStat.RemoveStaleItems(&recentStat)
+		} else {
+			// Update statistics
+			curr, err := datasource.GetCurrentIRQStat(opt.excludedIRQ)
+			if err == nil {
+				recentStat = curr
+			}
 		}
 	}
 

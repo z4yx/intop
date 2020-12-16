@@ -2,3 +2,7 @@ github.com/akamensky/argparse v1.2.2 h1:P17T0ZjlUNJuWTPPJ2A5dM1wxarHgHqfYH+AZTo2
 github.com/akamensky/argparse v1.2.2/go.mod h1:S5kwC7IuDcEr5VeXtGPRVZ5o/FdhcMlQz4IZQuw64xA=
 github.com/gbin/goncurses v0.0.0-20141106211150-34d9399fcea5 h1:1zsAMqM0C3Yjv9KWjh/68s/07bYeev6c0D4FwHkl13w=
 github.com/gbin/goncurses v0.0.0-20141106211150-34d9399fcea5/go.mod h1:dmRjyC3ZOQQ4EXWMOIAQi0TLaJPcg61LFsJ9mvhSGRE=
+github.com/jinzhu/copier v0.1.0 h1:Vh8xALtH3rrKGB/XIRe5d0yCTHPZFauWPLvdpDAbi88=
+github.com/jinzhu/copier v0.1.0/go.mod h1:24xnZezI2Yqac9J61UC6/dG/k76ttpq0DdJI3QmUvro=
+github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 h1:RWengNIwukTxcDr9M+97sNutRR1RKhG96O6jWumTTnw=
+github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826/go.mod h1:TaXosZuwdSHYgviHp1DAtfrULt5eUgsSMsZf+YrPgl8=

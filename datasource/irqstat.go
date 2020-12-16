@@ -1,6 +1,11 @@
 package datasource
 
-import "sort"
+import (
+	"sort"
+	"time"
+
+	"github.com/mohae/deepcopy"
+)
 
 type IRQSource struct {
 	Name   string
@@ -9,6 +14,7 @@ type IRQSource struct {
 }
 
 type IRQStat struct {
+	AcqTime    time.Time
 	CPUName    []string
 	CPUSum     []uint64
 	IRQSources map[int]IRQSource
@@ -96,4 +102,8 @@ func (s *IRQStat) RemoveStaleItems(n *IRQStat) {
 	for _, num := range rmList {
 		delete(s.IRQSources, num)
 	}
+}
+
+func (s *IRQStat) Clone() IRQStat {
+	return deepcopy.Copy(*s).(IRQStat)
 }

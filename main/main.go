@@ -13,15 +13,20 @@ import (
 
 type options struct {
 	excludedIRQ map[int]bool
+	filteredCPU map[int]bool
 	labelWidth  int
 }
 
 func parseOptions() (options, error) {
 	var opt options
 	parser := argparse.NewParser("intop", "Real-time visualization of /proc/interrupts")
-	excludedList := parser.IntList("e", "exclude", &argparse.Options{
+	excludedIrqList := parser.IntList("e", "exclude", &argparse.Options{
 		Required: false,
 		Help:     "exclude the given IRQ number",
+	})
+	filteredCPUList := parser.IntList("c", "cpu", &argparse.Options{
+		Required: false,
+		Help:     "display specified CPUs only",
 	})
 	labelWidth := parser.Int("w", "width", &argparse.Options{
 		Required: false,
@@ -37,11 +42,31 @@ func parseOptions() (options, error) {
 	}
 
 	opt.excludedIRQ = map[int]bool{}
-	for _, v := range *excludedList {
+	for _, v := range *excludedIrqList {
 		opt.excludedIRQ[v] = true
+	}
+	if len(*filteredCPUList) > 0 {
+		opt.filteredCPU = map[int]bool{}
+		for _, v := range *filteredCPUList {
+			opt.filteredCPU[v] = true
+		}
+
 	}
 	opt.labelWidth = *labelWidth
 	return opt, nil
+}
+
+func filterCPUs(opt *options, cpus []int) []int {
+	if opt.filteredCPU == nil {
+		return cpus
+	}
+	out := make([]int, 0, len(cpus))
+	for _, c := range cpus {
+		if _, exist := opt.filteredCPU[c]; exist {
+			out = append(out, c)
+		}
+	}
+	return out
 }
 
 func setLabelWidth(ui *IntopUI, opt *options, baseStat *datasource.IRQStat) {
@@ -96,7 +121,9 @@ func main() {
 		baseStat.RemoveStaleItems(&recentStat)
 		recentStat.Subtract(&baseStat)
 
-		ui.SetCPUOrders(recentStat.CalcCPURanking())
+		cpusInOrder := recentStat.CalcCPURanking()
+		cpusInOrder = filterCPUs(&opt, cpusInOrder)
+		ui.SetCPUOrders(cpusInOrder)
 		ui.DrawHeaderLines(recentStat.CPUName, recentStat.CPUSum)
 		irqOrders := recentStat.CalcIRQSrcRanking()
 		for i, num := range irqOrders {

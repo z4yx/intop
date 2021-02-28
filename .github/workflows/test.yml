@@ -23,3 +23,9 @@ jobs:
     - name: Build
       run: |
         go build -ldflags "-linkmode external -extldflags '-static -lncurses -lgpm'" -o intop.amd64 ./main
+
+    - name: Test
+      shell: |
+        script -e -c "bash --noprofile --norc -eo pipefail {0}"
+      run: |
+        timeout 3s ./intop.amd64 -k

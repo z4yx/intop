@@ -15,6 +15,7 @@ type options struct {
 	excludedIRQ map[int]bool
 	filteredCPU map[int]bool
 	labelWidth  int
+	keepNumbers bool
 }
 
 func parseOptions() (options, error) {
@@ -32,6 +33,11 @@ func parseOptions() (options, error) {
 		Required: false,
 		Default:  -1,
 		Help:     "width of IRQ name column",
+	})
+	keepNumbers := parser.Flag("k", "keep", &argparse.Options{
+		Required: false,
+		Default:  false,
+		Help:     "keep statistic numbers on start",
 	})
 	err := parser.Parse(os.Args)
 	if err != nil {
@@ -53,6 +59,7 @@ func parseOptions() (options, error) {
 
 	}
 	opt.labelWidth = *labelWidth
+	opt.keepNumbers = *keepNumbers
 	return opt, nil
 }
 
@@ -78,6 +85,16 @@ func setLabelWidth(ui *IntopUI, opt *options, baseStat *datasource.IRQStat) {
 	}
 }
 
+func trapCtrlC() {
+	sigTrap := make(chan os.Signal)
+	signal.Notify(sigTrap, os.Interrupt, syscall.SIGTERM)
+	go (func() {
+		<-sigTrap
+		EndIntopUI()
+		os.Exit(0)
+	})()
+}
+
 func main() {
 	opt, err := parseOptions()
 	if err != nil {
@@ -90,13 +107,7 @@ func main() {
 		return
 	}
 
-	sigTrap := make(chan os.Signal)
-	signal.Notify(sigTrap, os.Interrupt, syscall.SIGTERM)
-	go (func() {
-		<-sigTrap
-		EndIntopUI()
-		os.Exit(0)
-	})()
+	trapCtrlC()
 
 	var baseStat, recentStat datasource.IRQStat
 	resetOldStats := func() bool {
@@ -112,6 +123,10 @@ func main() {
 
 	if !resetOldStats() {
 		return
+	}
+	if opt.keepNumbers {
+		// clear baseStat to zeros
+		baseStat.ZeroFill()
 	}
 	setLabelWidth(ui, &opt, &baseStat)
 

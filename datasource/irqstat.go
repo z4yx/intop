@@ -107,3 +107,16 @@ func (s *IRQStat) RemoveStaleItems(n *IRQStat) {
 func (s *IRQStat) Clone() IRQStat {
 	return deepcopy.Copy(*s).(IRQStat)
 }
+
+func (s *IRQStat) ZeroFill() {
+	for i := range s.CPUSum {
+		s.CPUSum[i] = 0
+	}
+	for num, info := range s.IRQSources {
+		info.Sum = 0
+		for i := range info.PerCPU {
+			info.PerCPU[i] = 0
+		}
+		s.IRQSources[num] = info
+	}
+}
